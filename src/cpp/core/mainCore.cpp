@@ -7,8 +7,8 @@ extern int launchApplicationOMP(void);
 int mainCore(void);
 
 int mainCore(void){
-    //int code = launchApplication();
-    int code = launchApplicationOMP();
+    int code = launchApplication();
+    //int code = launchApplicationOMP();
 
     return code;
 }
