@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cmath> //for sin
+#include <complex>
+
 #include "omp.h"
 
 #include "DomaineMaths.h"
@@ -8,6 +10,7 @@
 #include "GLImageFonctionelSelections.h"
 #include "CalibreurCudas.h"
 
+template<int N>
 class MandelBrotFunctionalImage : public ImageFonctionelSelectionMOOs {
     public:
 	MandelBrotFunctionalImage(int m, int n, DomaineMaths domain);
@@ -16,17 +19,23 @@ class MandelBrotFunctionalImage : public ImageFonctionelSelectionMOOs {
 	void onDomaineChangePerformed(const DomaineMaths& domainNew);
 
     private:
-	float color(float x, float y);
-	float d(float x, float y);
+	float mandelbrot(float x, float y);
 
 	void refreshAll(const DomaineMaths& domainNew);
 };
 
-MandelBrotFunctionalImage::MandelBrotFunctionalImage(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain) {
+template<int N>
+MandelBrotFunctionalImage<N>::MandelBrotFunctionalImage(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain) {
     onDomaineChangePerformed(domain);
 }
 
-void MandelBrotFunctionalImage::refreshAll(const DomaineMaths& domainNew){
+template<int N>
+void MandelBrotFunctionalImage<N>::onDomaineChangePerformed(const DomaineMaths& domainNew){
+    refreshAll(domainNew);
+}
+
+template<int N>
+void MandelBrotFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
     int w = getW();
     int h = getH();
 
@@ -38,9 +47,14 @@ void MandelBrotFunctionalImage::refreshAll(const DomaineMaths& domainNew){
 	float x = domainNew.x0;
 
 	for(int j = 1; j <= w; ++j){
-	    float c = color(x,y);
+	    float h = mandelbrot(x, y);
 
-	    setRGBA(i, j, c, c, c);
+	    if(h == 0){
+		setRGBA(i, j, 0, 0, 0);
+	    } else {
+		//setHSB(i, j, h, 1, 1);
+		setFloatRGBA(i, j, h, h, h);
+	    }
 
 	    x += dx;
 	}
@@ -49,19 +63,22 @@ void MandelBrotFunctionalImage::refreshAll(const DomaineMaths& domainNew){
     }
 }
 
-void MandelBrotFunctionalImage::onDomaineChangePerformed(const DomaineMaths& domainNew){
-    refreshAll(domainNew);
-}
+template<int N>
+float MandelBrotFunctionalImage<N>::mandelbrot(float x, float y){
+    std::complex<float> z = std::complex<float>(0, 0);
 
-float MandelBrotFunctionalImage::color(float x, float y){
-    return 128 + 127 * ((cos(d(x,y) / (float)10 -(10 / (float)7))) / (d(x,y) / 10 + 1));
-}
+    float n = 0;
+    float norm;
 
-float MandelBrotFunctionalImage::d(float x, float y){
-    float fx = x - (getW() / 2);
-    float fy = y - (getH() / 2);
+    do{
+	z = z * z + std::complex<float>(x, y);
 
-    return sqrt(fx * fx + fy * fy);
+	++n;
+
+	norm = std::norm(z);
+    } while (norm < 2.0 && n < N);
+
+    return n == N ? 0 : n;
 }
 
 extern int launchApplication(){
@@ -70,11 +87,17 @@ extern int launchApplication(){
     char** argv = NULL;
     GLUTWindowManagers::init(0, argv);
 
-    int dim = 600;
+    float xMin = -1.3968;
+    float xMax = -1.3578;
+    float yMin = -0.03362;
+    float yMax = 0.0013973;
 
-    DomaineMaths domain(0, 0, dim, dim);
+    DomaineMaths domain(xMin, yMin, xMax - xMin, yMax - yMin);
+
+    int w = 800;
+    int h = 600;
    
-    MandelBrotFunctionalImage* functionalImage = new MandelBrotFunctionalImage(dim, dim, domain);
+    MandelBrotFunctionalImage<102>* functionalImage = new MandelBrotFunctionalImage<102>(w, h, domain);
     GLImageFonctionelSelections* functionSelections = new GLImageFonctionelSelections(functionalImage);
 
     GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();
