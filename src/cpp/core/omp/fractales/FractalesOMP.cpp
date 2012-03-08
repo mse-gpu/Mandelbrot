@@ -85,32 +85,6 @@ float RipplingFunctionalImageOMP::d(float x, float y){
     return sqrt(fx * fx + fy * fy);
 }
 
-class RipplingGLImageOMP : public GLImageFonctionelSelections {
-    public:
-	RipplingGLImageOMP(RipplingFunctionalImageOMP *ptrImageFonctionel);
-
-    private:
-	float t;
-	float dt;
-
-	void idleFunc();
-
-	RipplingFunctionalImageOMP* image;
-};
-
-RipplingGLImageOMP::RipplingGLImageOMP(RipplingFunctionalImageOMP* ptrImageFonctionel) : GLImageFonctionelSelections(ptrImageFonctionel), image(ptrImageFonctionel) {
-    t = 1;
-
-    //Define the speed of the animation
-    dt = 2 * (atan(1) * 4) / (float) 36;
-}
-
-void RipplingGLImageOMP::idleFunc(){
-    t += dt;
-    image->setT(t);
-    updateView();
-}
-
 extern int launchApplicationOMP(){
     omp_set_num_threads(THREADS);
 
@@ -124,7 +98,7 @@ extern int launchApplicationOMP(){
     DomaineMaths domain(0, 0, dim, dim);
    
     RipplingFunctionalImageOMP* functionalImage = new RipplingFunctionalImageOMP(dim, dim, domain);
-    RipplingGLImageOMP* functionSelections = new RipplingGLImageOMP(functionalImage);
+    GLImageFonctionelSelections* functionSelections = new GLImageFonctionelSelections(functionalImage);
 
     GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();
     windowManager->createWindow(functionSelections);
