@@ -90,7 +90,7 @@ float MandelBrotFunctionalImageOMP<N>::mandelbrot(float x, float y){
 	++n;
 
 	norm = sqrt(real * real + imag * imag);
-    } while (norm < 2.0 && n < N);
+    } while (norm <= 2.0 && n < N);
 
     return n == N ? 0 : (n / (float) N);
 }

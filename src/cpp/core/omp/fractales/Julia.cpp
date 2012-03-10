@@ -9,33 +9,36 @@
 #include "GLImageFonctionelSelections.h"
 
 template<int N>
-class MandelBrotFunctionalImage : public ImageFonctionelSelectionMOOs {
+class JuliaFunctionalImage : public ImageFonctionelSelectionMOOs {
     public:
-	MandelBrotFunctionalImage(int m, int n, DomaineMaths domain);
+	JuliaFunctionalImage(int m, int n, DomaineMaths domain, float cReal, float cImag);
 
     protected:
 	void onDomaineChangePerformed(const DomaineMaths& domainNew);
 
     private:
-	float mandelbrot(float x, float y);
+	float julia(float x, float y);
 
 	void refreshAll(const DomaineMaths& domainNew);
+
+	const float cReal;
+	const float cImag;
 };
 
 template<int N>
-MandelBrotFunctionalImage<N>::MandelBrotFunctionalImage(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain) {
+JuliaFunctionalImage<N>::JuliaFunctionalImage(int m, int n, DomaineMaths domain, float cReal, float cImag) : ImageFonctionelSelectionMOOs(m,n,domain), cReal(cReal), cImag(cImag) {
     //Init the domain
     onDomaineChangePerformed(domain);
 }
 
 template<int N>
-void MandelBrotFunctionalImage<N>::onDomaineChangePerformed(const DomaineMaths& domainNew){
+void JuliaFunctionalImage<N>::onDomaineChangePerformed(const DomaineMaths& domainNew){
     //Repaint everything
     refreshAll(domainNew);
 }
 
 template<int N>
-void MandelBrotFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
+void JuliaFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
     int w = getW();
     int h = getH();
 
@@ -47,7 +50,7 @@ void MandelBrotFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
 	float x = domainNew.x0;
 
 	for(int j = 1; j <= w; ++j){
-	    float h = mandelbrot(x, y);
+	    float h = julia(x, y);
 
 	    //setFloatRGBA(i, j, h, h, h);
 	    if(h == 0){
@@ -64,17 +67,17 @@ void MandelBrotFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
 }
 
 template<int N>
-float MandelBrotFunctionalImage<N>::mandelbrot(float x, float y){
-    float imag = 0.0;
-    float real = 0.0;
+float JuliaFunctionalImage<N>::julia(float x, float y){
+    float real = x;
+    float imag = y;
 
     float n = 0;
     float norm;
 
     do{
 	float tmpReal = real;
-	real = real * real - imag * imag + x;
-	imag = tmpReal * imag + imag * tmpReal + y;
+	real = real * real - imag * imag + cReal;
+	imag = tmpReal * imag + imag * tmpReal + cImag;
 
 	++n;
 
@@ -84,23 +87,23 @@ float MandelBrotFunctionalImage<N>::mandelbrot(float x, float y){
     return n == N ? 0 : (n / (float) N);
 }
 
-extern int launchMandelbrot(){
-    std::cout << "Launch the application" << std::endl;
+extern int launchJulia(){
+    std::cout << "Launch Julia" << std::endl;
 
     char** argv = NULL;
     GLUTWindowManagers::init(0, argv);
 
-    float xMin = -1.3968;
-    float xMax = -1.3578;
-    float yMin = -0.03362;
-    float yMax = 0.0013973;
+    float xMin = -1.3;
+    float xMax = +1.3;
+    float yMin = -1.4;
+    float yMax = +1.4;
 
     DomaineMaths domain(xMin, yMin, xMax - xMin, yMax - yMin);
 
     int w = 800;
-    int h = 600;
+    int h = 800;
    
-    MandelBrotFunctionalImage<102>* functionalImage = new MandelBrotFunctionalImage<102>(w, h, domain);
+    JuliaFunctionalImage<52>* functionalImage = new JuliaFunctionalImage<52>(w, h, domain, -0.12, +0.85);
     GLImageFonctionelSelections* functionSelections = new GLImageFonctionelSelections(functionalImage);
 
     GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();
