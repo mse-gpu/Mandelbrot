@@ -10,10 +10,11 @@
 
 #define THREADS 12
 
-template<int N>
 class MandelBrotFunctionalImageOMP : public ImageFonctionelSelectionMOOs {
     public:
 	MandelBrotFunctionalImageOMP(int m, int n, DomaineMaths domain);
+
+	void setN(int n);
 
     protected:
 	void onDomaineChangePerformed(const DomaineMaths& domainNew);
@@ -22,22 +23,27 @@ class MandelBrotFunctionalImageOMP : public ImageFonctionelSelectionMOOs {
 	float mandelbrot(float x, float y);
 
 	void refreshAll(const DomaineMaths& domainNew);
+
+	int N;
 };
 
-template<int N>
-MandelBrotFunctionalImageOMP<N>::MandelBrotFunctionalImageOMP(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain) {
+MandelBrotFunctionalImageOMP::MandelBrotFunctionalImageOMP(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain), N(10) {
     //Init the domain
     onDomaineChangePerformed(domain);
 }
 
-template<int N>
-void MandelBrotFunctionalImageOMP<N>::onDomaineChangePerformed(const DomaineMaths& domainNew){
+void MandelBrotFunctionalImageOMP::setN(int n){
+    N = n;
+
+    refreshAll(getCurrentDomaine());
+}
+
+void MandelBrotFunctionalImageOMP::onDomaineChangePerformed(const DomaineMaths& domainNew){
     //Repaint everything
     refreshAll(domainNew);
 }
 
-template<int N>
-void MandelBrotFunctionalImageOMP<N>::refreshAll(const DomaineMaths& domainNew){
+void MandelBrotFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
     int w = getW();
     int h = getH();
 
@@ -74,8 +80,7 @@ void MandelBrotFunctionalImageOMP<N>::refreshAll(const DomaineMaths& domainNew){
     }
 }
 
-template<int N>
-float MandelBrotFunctionalImageOMP<N>::mandelbrot(float x, float y){
+float MandelBrotFunctionalImageOMP::mandelbrot(float x, float y){
     float imag = 0.0;
     float real = 0.0;
 
@@ -93,6 +98,36 @@ float MandelBrotFunctionalImageOMP<N>::mandelbrot(float x, float y){
     } while (norm <= 2.0 && n < N);
 
     return n == N ? 0 : (n / (float) N);
+}
+
+class MandelBrotGLImageOMP : public GLImageFonctionelSelections {
+    public:
+	MandelBrotGLImageOMP(MandelBrotFunctionalImageOMP* image);
+
+    private:
+	float N;
+	float acc;
+
+	void idleFunc();
+
+	MandelBrotFunctionalImageOMP* image;
+};
+
+MandelBrotGLImageOMP::MandelBrotGLImageOMP(MandelBrotFunctionalImageOMP* newImage) : GLImageFonctionelSelections(newImage), image(newImage) {
+    N = 10;
+    acc = 0;
+}
+
+void MandelBrotGLImageOMP::idleFunc(){
+    ++acc;
+
+    //Do not change everytime to make something smoother
+    if(acc == 10000){
+	++N;
+	image->setN(N);
+	updateView();
+	acc = 0;
+    }
 }
 
 extern int launchMandelbrotOMP(){
@@ -113,8 +148,8 @@ extern int launchMandelbrotOMP(){
     int w = 800;
     int h = 600;
 
-    MandelBrotFunctionalImageOMP<102>* functionalImage = new MandelBrotFunctionalImageOMP<102>(w, h, domain);
-    GLImageFonctionelSelections* functionSelections = new GLImageFonctionelSelections(functionalImage);
+    MandelBrotFunctionalImageOMP* functionalImage = new MandelBrotFunctionalImageOMP(w, h, domain);
+    MandelBrotGLImageOMP* functionSelections = new MandelBrotGLImageOMP(functionalImage);
 
     GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();
     windowManager->createWindow(functionSelections);

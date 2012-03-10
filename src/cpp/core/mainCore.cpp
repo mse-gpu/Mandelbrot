@@ -8,8 +8,8 @@ extern int launchMandelbrotOMP(void);
 int mainCore(void);
 
 int mainCore(void){
-    int code = launchMandelbrot();
-    //int code = launchMandelbrotOMP();
+    //int code = launchMandelbrot();
+    int code = launchMandelbrotOMP();
     //int code = launchJulia();
 
     return code;
