@@ -84,7 +84,7 @@ float MandelBrotFunctionalImage<N>::mandelbrot(float x, float y){
     return n == N ? 0 : (n / (float) N);
 }
 
-extern int launchApplication(){
+extern int launchMandelbrot(){
     std::cout << "Launch the application" << std::endl;
 
     char** argv = NULL;

@@ -95,7 +95,7 @@ float MandelBrotFunctionalImageOMP<N>::mandelbrot(float x, float y){
     return n == N ? 0 : (n / (float) N);
 }
 
-extern int launchApplicationOMP(){
+extern int launchMandelbrotOMP(){
     omp_set_num_threads(THREADS);
 
     std::cout << "Launch the application with OMP" << std::endl;

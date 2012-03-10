@@ -1,14 +1,14 @@
 #include <stdlib.h>
 #include <iostream>
 
-extern int launchApplication(void);
-extern int launchApplicationOMP(void);
+extern int launchMandelbrot(void);
+extern int launchMandelbrotOMP(void);
 
 int mainCore(void);
 
 int mainCore(void){
-    //int code = launchApplication();
-    int code = launchApplicationOMP();
+    //int code = launchMandelbrot();
+    int code = launchMandelbrotOMP();
 
     return code;
 }
