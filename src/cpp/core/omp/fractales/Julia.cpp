@@ -93,17 +93,17 @@ extern int launchJulia(){
     char** argv = NULL;
     GLUTWindowManagers::init(0, argv);
 
-    float xMin = -1.3;
-    float xMax = +1.3;
-    float yMin = -1.4;
-    float yMax = +1.4;
+    float xMin = -1.7;
+    float xMax = +1.7;
+    float yMin = -1.1;
+    float yMax = +1.1;
 
     DomaineMaths domain(xMin, yMin, xMax - xMin, yMax - yMin);
 
     int w = 800;
-    int h = 800;
+    int h = 600;
    
-    JuliaFunctionalImage<52>* functionalImage = new JuliaFunctionalImage<52>(w, h, domain, -0.12, +0.85);
+    JuliaFunctionalImage<300>* functionalImage = new JuliaFunctionalImage<300>(w, h, domain, -0.745, +0.1);
     GLImageFonctionelSelections* functionSelections = new GLImageFonctionelSelections(functionalImage);
 
     GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();
