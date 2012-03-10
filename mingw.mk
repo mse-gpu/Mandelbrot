@@ -11,12 +11,15 @@
 #public #
 #########
 
-SRC_AUX:= ../PRODUCTION/commonExt/windows
+SRC_AUX+=../PRODUCTION/commonExt/include
+SRC_AUX+=../PRODUCTION/commonExt/windows
 
 #Option de compilation 
 #Elles seront ensuite surchargées automatiquement (par exemple en fonction du type de la target)
-#Version minimale : Ne rien metter laisser vierge!
-CXXFLAGS:= -W -Wall  
+#Compilation: (minimal conseillé : vide) 
+#CXXFLAGS:= -W -Wall 
+#CXXFLAGS+= -mtune=core2 
+CXXFLAGS+= -mtune=corei7
 CXXFLAGS+= -O3 -frerun-loop-opt -fgcse -fomit-frame-pointer
 CXXFLAGS+= -fopenmp
 
@@ -26,14 +29,14 @@ ARFLAGS:=
 #Option de linkage
 #Elles seront ensuite surchargées automatiquement (par exemple en fonction du type de la target)
 #Version minimale : Ne rien metter laisser vierge!
-
-LDFLAGS:= -Wl,--kill-at
+LDFLAGS:=
 
 #Injection de variable dans le code (same as #define XXX YYY)
 CODE_DEFINE_VARIABLES:=
 
 #separateur est espace,sans extension .lib, sans prefixe lib
-ADD_LIBRARY_FILES:=opengl32 glu32 kernel32 user32 gdi32
+ADD_LIBRARY_FILES:=
+
 EXCLUDE_LIBRARY_FILES:=
 
 #########
@@ -42,6 +45,7 @@ EXCLUDE_LIBRARY_FILES:=
 
 COMPILATEUR:=mingw
 OS:=Linux
+USER=${USERNAME}
 
 ROOT_MAKEFILE_PRIVATE:=../PRODUCTION/MANAGER/makefile/private
 -include dataProject.mk

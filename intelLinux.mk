@@ -4,21 +4,23 @@
 #
 # Contrainte
 #
-#	Dans les dï¿½finitions de variables ci-dessous, ne laisser jamais d'espace ï¿½ la fin!!!
+#	Dans les definitions de variables ci-dessous, ne laisser jamais d'espace a la fin!!!
 #
 
 #########
 #public #
 #########
 
-SRC_AUX:= ../PRODUCTION/commonExt/linux
+SRC_AUX+=../PRODUCTION/commonExt/include
+SRC_AUX+=../PRODUCTION/commonExt/linux
 
 #Option de compilation 
 #Elles seront ensuite surchargï¿½es automatiquement (par exemple en fonction du type de la target)
-#Version minimale : Ne rien metter laisser vierge!
-CXXFLAGS:= -w
-CXXFLAGS+= -O3 -QxSSSE3 -Qparallel -Qpar-threshold100  
-CXXFLAGS+= -Qopenmp
+#Compilation: (minimal conseillé : vide) 
+#CXXFLAGS:= -w 
+CXXFLAGS+= -axSSSE3
+CXXFLAGS+= -fast -O3 -parallel -par-threshold100  
+CXXFLAGS+= -openmp
 
 #Option de compilation Static Lib 
 ARFLAGS:=
@@ -26,7 +28,7 @@ ARFLAGS:=
 #Option de linkage
 #Elles seront ensuite surchargï¿½es automatiquement (par exemple en fonction du type de la target)
 #Version minimale : Ne rien metter laisser vierge!
-LDFLAGS_AUX:= 
+LDFLAGS_AUX:=
 
 #Injection de variable dans le code (same as #define XXX YYY)
 CODE_DEFINE_VARIABLES:=

@@ -11,14 +11,18 @@
 #public #
 #########
 
-SRC_AUX:= ../PRODUCTION/commonExt/windows
+SRC_AUX+=../PRODUCTION/commonExt/include
+SRC_AUX+=../PRODUCTION/commonExt/windows
 
 #Option de compilation 
 #Elles seront ensuite surchargées automatiquement (par exemple en fonction du type de la target)
-#Version minimale : Ne rien metter laisser vierge!
-CXXFLAGS:= /w 
-CXXFLAGS+= /O3 /QxSSSE3 /Qparallel /Qpar-threshold100  
-CXXFLAGS+= /Qopenmp
+#Compilation: (minimal conseillé : /MD)
+CXXFLAGS:= /MD #pour linker cpptest
+#CXXFLAGS:= /w 
+CXXFLAGS+= /QxSSSE3
+CXXFLAGS+= /fast /O3 /Qparallel /Qpar-threshold100  
+CXXFLAGS+= /openmp
+CXXFLAGS+= /EHsc
 
 #Option de compilation Static Lib 
 ARFLAGS:=
@@ -29,18 +33,16 @@ ARFLAGS:=
 LDFLAGS_AUX:=
 
 #Injection de variable dans le code (same as #define XXX YYY)
-CODE_DEFINE_VARIABLES:=WIN32
-#WIN32 pour cppTest
-#CODE_DEFINE_VARIABLES:=LINUX_CBI
+CODE_DEFINE_VARIABLES:=
 
 #Minimum: rien!
 #true (ou n'importe quoi) pour activer!
-IS_DEFAULT_SYS_LIBRARY_ENABLE:=yes
-IS_ADVANCED_SYS_LIBRARY_ENABLE:=yes
+IS_DEFAULT_SYS_LIBRARY_ENABLE:=
+IS_ADVANCED_SYS_LIBRARY_ENABLE:=y#pour linker cpptest
 
 #separateur est espace
 EXCLUDE_LIBRARY_FILES:=
-ADD_LIBRARY_FILES:=kernel32.lib gdi32.lib opengl32.lib glu32.lib
+ADD_LIBRARY_FILES:=
 
 #########
 #Private#
@@ -48,6 +50,7 @@ ADD_LIBRARY_FILES:=kernel32.lib gdi32.lib opengl32.lib glu32.lib
 
 COMPILATEUR:=INTEL
 OS:=Win
+USER=${USERNAME}
 
 ROOT_MAKEFILE_PRIVATE:=../PRODUCTION/MANAGER/makefile/private
 -include dataProject.mk

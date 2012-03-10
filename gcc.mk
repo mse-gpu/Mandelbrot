@@ -11,13 +11,15 @@
 #public #
 #########
 
-SRC_AUX:= ../PRODUCTION/commonExt/linux
+SRC_AUX+=../PRODUCTION/commonExt/include
+SRC_AUX+=../PRODUCTION/commonExt/linux
 
 #Option de compilation 
 #Elles seront ensuite surchargées automatiquement (par exemple en fonction du type de la target)
-#Version minimale : Ne rien metter laisser vierge!
-CXXFLAGS:= -W -Wall 
-#CXXFLAGS+= -O3 -mtune=core2 -frerun-loop-opt -fgcse -fomit-frame-pointer 
+#Compilation: (minimal conseillé : vide) 
+#CXXFLAGS:= -W -Wall 
+CXXFLAGS+= -mtune=core2
+#CXXFLAGS+= -mtune=corei7
 CXXFLAGS+= -O3 -frerun-loop-opt -fgcse -fomit-frame-pointer
 CXXFLAGS+= -fopenmp
 
@@ -35,7 +37,7 @@ CODE_DEFINE_VARIABLES:=
 
 #separateur est espace,sans extension .lib, sans prefixe lib
 EXCLUDE_LIBRARY_FILES:=
-ADD_LIBRARY_FILES:=GL GLEW GLU glut
+ADD_LIBRARY_FILES:=
 
 #########
 #Private#
