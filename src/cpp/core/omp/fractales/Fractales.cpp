@@ -25,11 +25,13 @@ class MandelBrotFunctionalImage : public ImageFonctionelSelectionMOOs {
 
 template<int N>
 MandelBrotFunctionalImage<N>::MandelBrotFunctionalImage(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain) {
+    //Init the domain
     onDomaineChangePerformed(domain);
 }
 
 template<int N>
 void MandelBrotFunctionalImage<N>::onDomaineChangePerformed(const DomaineMaths& domainNew){
+    //Repaint everything
     refreshAll(domainNew);
 }
 
@@ -48,12 +50,8 @@ void MandelBrotFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
 	for(int j = 1; j <= w; ++j){
 	    float h = mandelbrot(x, y);
 
-	    if(h == 0){
-		setRGBA(i, j, 0, 0, 0);
-	    } else {
-		//setHSB(i, j, h, 1, 1);
-		setFloatRGBA(i, j, h, h, h);
-	    }
+	    setHSB(i, j, h, 1, 1);
+	    std::cout << h << std::endl;
 
 	    x += dx;
 	}
@@ -77,7 +75,7 @@ float MandelBrotFunctionalImage<N>::mandelbrot(float x, float y){
 	norm = std::norm(z);
     } while (norm < 2.0 && n < N);
 
-    return n == N ? 0 : n;
+    return n == N ? 0 : (n / (float) N);
 }
 
 extern int launchApplication(){
