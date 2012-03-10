@@ -1,49 +1,48 @@
 #include <iostream>
-#include <cmath> //for sin
+#include <cmath>
+
 #include "omp.h"
 
 #include "DomaineMaths.h"
 #include "GLUTWindowManagers.h"
 #include "ImageFonctionelSelectionMOOs.h"
 #include "GLImageFonctionelSelections.h"
-#include "CalibreurCudas.h"
 
 #define THREADS 12
 
-class RipplingFunctionalImageOMP : public ImageFonctionelSelectionMOOs {
+template<int N>
+class MandelBrotFunctionalImageOMP : public ImageFonctionelSelectionMOOs {
     public:
-	RipplingFunctionalImageOMP(int m, int n, DomaineMaths domain);
-
-	void setT(float t);
+	MandelBrotFunctionalImageOMP(int m, int n, DomaineMaths domain);
 
     protected:
 	void onDomaineChangePerformed(const DomaineMaths& domainNew);
 
     private:
-	float color(float x, float y);
-	float d(float x, float y);
+	float mandelbrot(float x, float y);
 
 	void refreshAll(const DomaineMaths& domainNew);
-
-	float t;
 };
 
-RipplingFunctionalImageOMP::RipplingFunctionalImageOMP(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain), t(1) {
+template<int N>
+MandelBrotFunctionalImageOMP<N>::MandelBrotFunctionalImageOMP(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain) {
+    //Init the domain
     onDomaineChangePerformed(domain);
 }
 
-void RipplingFunctionalImageOMP::setT(float newT){
-    t = newT;
-
-    refreshAll(getCurrentDomaine());
+template<int N>
+void MandelBrotFunctionalImageOMP<N>::onDomaineChangePerformed(const DomaineMaths& domainNew){
+    //Repaint everything
+    refreshAll(domainNew);
 }
 
-void RipplingFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
-    const int w = getW();
-    const int h = getH();
+template<int N>
+void MandelBrotFunctionalImageOMP<N>::refreshAll(const DomaineMaths& domainNew){
+    int w = getW();
+    int h = getH();
 
-    const float dx = (float) (domainNew.dx / (float) w);
-    const float dy = (float) (domainNew.dy / (float) h);
+    float dx = (float) (domainNew.dx / (float) w);
+    float dy = (float) (domainNew.dy / (float) h);
 
     #pragma omp parallel
     {
@@ -56,9 +55,14 @@ void RipplingFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
 	    float x = domainNew.x0;
 
 	    for(int j = 1; j <= w; ++j){
-		float c = color(x,y);
+		float h = mandelbrot(x, y);
 
-		setRGBA(i, j, c, c, c, 255);
+		//setFloatRGBA(i, j, h, h, h);
+		if(h == 0){
+		    setHSB(i, j, 0, 0, 0);
+		} else {
+		    setHSB(i, j, h, 1.0, 1.0);
+		}
 
 		x += dx;
 	    }
@@ -70,19 +74,25 @@ void RipplingFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
     }
 }
 
-void RipplingFunctionalImageOMP::onDomaineChangePerformed(const DomaineMaths& domainNew){
-    refreshAll(domainNew);
-}
+template<int N>
+float MandelBrotFunctionalImageOMP<N>::mandelbrot(float x, float y){
+    float imag = 0.0;
+    float real = 0.0;
 
-float RipplingFunctionalImageOMP::color(float x, float y){
-    return 128 + 127 * ((cos(d(x,y) / (float)10 -(t / (float)7))) / (d(x,y) / 10 + 1));
-}
+    float n = 0;
+    float norm;
 
-float RipplingFunctionalImageOMP::d(float x, float y){
-    float fx = x - (getW() / 2);
-    float fy = y - (getH() / 2);
+    do{
+	float tmpReal = real;
+	real = real * real - imag * imag + x;
+	imag = tmpReal * imag + imag * tmpReal + y;
 
-    return sqrt(fx * fx + fy * fy);
+	++n;
+
+	norm = sqrt(real * real + imag * imag);
+    } while (norm < 2.0 && n < N);
+
+    return n == N ? 0 : (n / (float) N);
 }
 
 extern int launchApplicationOMP(){
@@ -93,11 +103,17 @@ extern int launchApplicationOMP(){
     char** argv = NULL;
     GLUTWindowManagers::init(0, argv);
 
-    int dim = 600;
+    float xMin = -1.3968;
+    float xMax = -1.3578;
+    float yMin = -0.03362;
+    float yMax = 0.0013973;
 
-    DomaineMaths domain(0, 0, dim, dim);
-   
-    RipplingFunctionalImageOMP* functionalImage = new RipplingFunctionalImageOMP(dim, dim, domain);
+    DomaineMaths domain(xMin, yMin, xMax - xMin, yMax - yMin);
+
+    int w = 800;
+    int h = 600;
+
+    MandelBrotFunctionalImageOMP<102>* functionalImage = new MandelBrotFunctionalImageOMP<102>(w, h, domain);
     GLImageFonctionelSelections* functionSelections = new GLImageFonctionelSelections(functionalImage);
 
     GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();

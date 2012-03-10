@@ -1,6 +1,5 @@
 #include <iostream>
-#include <cmath> //for sin
-#include <complex>
+#include <cmath>
 
 #include "omp.h"
 
