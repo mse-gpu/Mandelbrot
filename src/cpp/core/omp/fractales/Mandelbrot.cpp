@@ -8,10 +8,11 @@
 #include "ImageFonctionelSelectionMOOs.h"
 #include "GLImageFonctionelSelections.h"
 
-template<int N>
 class MandelBrotFunctionalImage : public ImageFonctionelSelectionMOOs {
     public:
 	MandelBrotFunctionalImage(int m, int n, DomaineMaths domain);
+
+	void setN(int n);
 
     protected:
 	void onDomaineChangePerformed(const DomaineMaths& domainNew);
@@ -20,22 +21,27 @@ class MandelBrotFunctionalImage : public ImageFonctionelSelectionMOOs {
 	float mandelbrot(float x, float y);
 
 	void refreshAll(const DomaineMaths& domainNew);
+
+	int N;
 };
 
-template<int N>
-MandelBrotFunctionalImage<N>::MandelBrotFunctionalImage(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain) {
+MandelBrotFunctionalImage::MandelBrotFunctionalImage(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain), N(10) {
     //Init the domain
     onDomaineChangePerformed(domain);
 }
 
-template<int N>
-void MandelBrotFunctionalImage<N>::onDomaineChangePerformed(const DomaineMaths& domainNew){
+void MandelBrotFunctionalImage::setN(int n){
+    N = n;
+
+    refreshAll(getCurrentDomaine());
+}
+
+void MandelBrotFunctionalImage::onDomaineChangePerformed(const DomaineMaths& domainNew){
     //Repaint everything
     refreshAll(domainNew);
 }
 
-template<int N>
-void MandelBrotFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
+void MandelBrotFunctionalImage::refreshAll(const DomaineMaths& domainNew){
     int w = getW();
     int h = getH();
 
@@ -63,8 +69,7 @@ void MandelBrotFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
     }
 }
 
-template<int N>
-float MandelBrotFunctionalImage<N>::mandelbrot(float x, float y){
+float MandelBrotFunctionalImage::mandelbrot(float x, float y){
     float imag = 0.0;
     float real = 0.0;
 
@@ -84,6 +89,36 @@ float MandelBrotFunctionalImage<N>::mandelbrot(float x, float y){
     return n == N ? 0 : (n / (float) N);
 }
 
+class MandelBrotGLImage : public GLImageFonctionelSelections {
+    public:
+	MandelBrotGLImage(MandelBrotFunctionalImage* image);
+
+    private:
+	float N;
+	float acc;
+
+	void idleFunc();
+
+	MandelBrotFunctionalImage* image;
+};
+
+MandelBrotGLImage::MandelBrotGLImage(MandelBrotFunctionalImage* newImage) : GLImageFonctionelSelections(newImage), image(newImage) {
+    N = 10;
+    acc = 0;
+}
+
+void MandelBrotGLImage::idleFunc(){
+    ++acc;
+
+    //Do not change everytime to make something smoother
+    if(acc == 1000){
+	++N;
+	image->setN(N);
+	updateView();
+	acc = 0;
+    }
+}
+
 extern int launchMandelbrot(){
     std::cout << "Launch the application" << std::endl;
 
@@ -100,8 +135,8 @@ extern int launchMandelbrot(){
     int w = 800;
     int h = 600;
    
-    MandelBrotFunctionalImage<102>* functionalImage = new MandelBrotFunctionalImage<102>(w, h, domain);
-    GLImageFonctionelSelections* functionSelections = new GLImageFonctionelSelections(functionalImage);
+    MandelBrotFunctionalImage* functionalImage = new MandelBrotFunctionalImage(w, h, domain);
+    MandelBrotGLImage* functionSelections = new MandelBrotGLImage(functionalImage);
 
     GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();
     windowManager->createWindow(functionSelections);
