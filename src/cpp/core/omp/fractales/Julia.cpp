@@ -8,10 +8,11 @@
 #include "ImageFonctionelSelectionMOOs.h"
 #include "GLImageFonctionelSelections.h"
 
-template<int N>
 class JuliaFunctionalImage : public ImageFonctionelSelectionMOOs {
     public:
 	JuliaFunctionalImage(int m, int n, DomaineMaths domain, float cReal, float cImag);
+
+	void setN(int n);
 
     protected:
 	void onDomaineChangePerformed(const DomaineMaths& domainNew);
@@ -23,22 +24,27 @@ class JuliaFunctionalImage : public ImageFonctionelSelectionMOOs {
 
 	const float cReal;
 	const float cImag;
+
+	int N;
 };
 
-template<int N>
-JuliaFunctionalImage<N>::JuliaFunctionalImage(int m, int n, DomaineMaths domain, float cReal, float cImag) : ImageFonctionelSelectionMOOs(m,n,domain), cReal(cReal), cImag(cImag) {
+JuliaFunctionalImage::JuliaFunctionalImage(int m, int n, DomaineMaths domain, float cReal, float cImag) : ImageFonctionelSelectionMOOs(m,n,domain), cReal(cReal), cImag(cImag), N(10) {
     //Init the domain
     onDomaineChangePerformed(domain);
 }
 
-template<int N>
-void JuliaFunctionalImage<N>::onDomaineChangePerformed(const DomaineMaths& domainNew){
+void JuliaFunctionalImage::setN(int n){
+    N = n;
+
+    refreshAll(getCurrentDomaine());
+}
+
+void JuliaFunctionalImage::onDomaineChangePerformed(const DomaineMaths& domainNew){
     //Repaint everything
     refreshAll(domainNew);
 }
 
-template<int N>
-void JuliaFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
+void JuliaFunctionalImage::refreshAll(const DomaineMaths& domainNew){
     int w = getW();
     int h = getH();
 
@@ -66,8 +72,7 @@ void JuliaFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
     }
 }
 
-template<int N>
-float JuliaFunctionalImage<N>::julia(float x, float y){
+float JuliaFunctionalImage::julia(float x, float y){
     float real = x;
     float imag = y;
 
@@ -87,6 +92,36 @@ float JuliaFunctionalImage<N>::julia(float x, float y){
     return n == N ? 0 : (n / (float) N);
 }
 
+class JuliaGLImage : public GLImageFonctionelSelections {
+    public:
+	JuliaGLImage(JuliaFunctionalImage* image);
+
+    private:
+	float N;
+	float acc;
+
+	void idleFunc();
+
+	JuliaFunctionalImage* image;
+};
+
+JuliaGLImage::JuliaGLImage(JuliaFunctionalImage* newImage) : GLImageFonctionelSelections(newImage), image(newImage) {
+    N = 10;
+    acc = 0;
+}
+
+void JuliaGLImage::idleFunc(){
+    ++acc;
+
+    //Do not change everytime to make something smoother
+    if(acc == 1000){
+	++N;
+	image->setN(N);
+	updateView();
+	acc = 0;
+    }
+}
+
 extern int launchJulia(){
     std::cout << "Launch Julia" << std::endl;
 
@@ -103,8 +138,8 @@ extern int launchJulia(){
     int w = 800;
     int h = 600;
    
-    JuliaFunctionalImage<300>* functionalImage = new JuliaFunctionalImage<300>(w, h, domain, -0.745, +0.1);
-    GLImageFonctionelSelections* functionSelections = new GLImageFonctionelSelections(functionalImage);
+    JuliaFunctionalImage* functionalImage = new JuliaFunctionalImage(w, h, domain, -0.745, +0.1);
+    JuliaGLImage* functionSelections = new JuliaGLImage(functionalImage);
 
     GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();
     windowManager->createWindow(functionSelections);
