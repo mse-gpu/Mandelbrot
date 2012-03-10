@@ -10,9 +10,9 @@
 
 #define THREADS 12
 
-class MandelBrotFunctionalImageOMP : public ImageFonctionelSelectionMOOs {
+class JuliaFunctionalImageOMP : public ImageFonctionelSelectionMOOs {
     public:
-	MandelBrotFunctionalImageOMP(int m, int n, DomaineMaths domain);
+	JuliaFunctionalImageOMP(int m, int n, DomaineMaths domain, float cReal, float cImag);
 
 	void incN();
 
@@ -20,30 +20,35 @@ class MandelBrotFunctionalImageOMP : public ImageFonctionelSelectionMOOs {
 	void onDomaineChangePerformed(const DomaineMaths& domainNew);
 
     private:
-	float mandelbrot(float x, float y);
+	float julia(float x, float y);
 
 	void refreshAll(const DomaineMaths& domainNew);
+
+	const float cReal;
+	const float cImag;
 
 	int N;
 };
 
-MandelBrotFunctionalImageOMP::MandelBrotFunctionalImageOMP(int m, int n, DomaineMaths domain) : ImageFonctionelSelectionMOOs(m,n,domain), N(10) {
+JuliaFunctionalImageOMP::JuliaFunctionalImageOMP(int m, int n, DomaineMaths domain, float cReal, float cImag) : ImageFonctionelSelectionMOOs(m,n,domain), cReal(cReal), cImag(cImag), N(10) {
     //Init the domain
     onDomaineChangePerformed(domain);
 }
 
-void MandelBrotFunctionalImageOMP::incN(){
+void JuliaFunctionalImageOMP::incN(){
     ++N;
 
     refreshAll(getCurrentDomaine());
 }
 
-void MandelBrotFunctionalImageOMP::onDomaineChangePerformed(const DomaineMaths& domainNew){
+void JuliaFunctionalImageOMP::onDomaineChangePerformed(const DomaineMaths& domainNew){
+    N = 10;
+
     //Repaint everything
     refreshAll(domainNew);
 }
 
-void MandelBrotFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
+void JuliaFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
     int w = getW();
     int h = getH();
 
@@ -61,7 +66,7 @@ void MandelBrotFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
 	    float x = domainNew.x0;
 
 	    for(int j = 1; j <= w; ++j){
-		float h = mandelbrot(x, y);
+		float h = julia(x, y);
 
 		//setFloatRGBA(i, j, h, h, h);
 		if(h == 0){
@@ -80,17 +85,17 @@ void MandelBrotFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
     }
 }
 
-float MandelBrotFunctionalImageOMP::mandelbrot(float x, float y){
-    float imag = 0.0;
-    float real = 0.0;
+float JuliaFunctionalImageOMP::julia(float x, float y){
+    float real = x;
+    float imag = y;
 
     float n = 0;
     float norm;
 
     do{
 	float tmpReal = real;
-	real = real * real - imag * imag + x;
-	imag = tmpReal * imag + imag * tmpReal + y;
+	real = real * real - imag * imag + cReal;
+	imag = tmpReal * imag + imag * tmpReal + cImag;
 
 	++n;
 
@@ -100,23 +105,23 @@ float MandelBrotFunctionalImageOMP::mandelbrot(float x, float y){
     return n == N ? 0 : (n / (float) N);
 }
 
-class MandelBrotGLImageOMP : public GLImageFonctionelSelections {
+class JuliaGLImageOMP : public GLImageFonctionelSelections {
     public:
-	MandelBrotGLImageOMP(MandelBrotFunctionalImageOMP* image);
+	JuliaGLImageOMP(JuliaFunctionalImageOMP* image);
 
     private:
 	float acc;
 
 	void idleFunc();
 
-	MandelBrotFunctionalImageOMP* image;
+	JuliaFunctionalImageOMP* image;
 };
 
-MandelBrotGLImageOMP::MandelBrotGLImageOMP(MandelBrotFunctionalImageOMP* newImage) : GLImageFonctionelSelections(newImage), image(newImage) {
+JuliaGLImageOMP::JuliaGLImageOMP(JuliaFunctionalImageOMP* newImage) : GLImageFonctionelSelections(newImage), image(newImage) {
     acc = 0;
 }
 
-void MandelBrotGLImageOMP::idleFunc(){
+void JuliaGLImageOMP::idleFunc(){
     ++acc;
 
     //Do not change everytime to make something smoother
@@ -127,26 +132,26 @@ void MandelBrotGLImageOMP::idleFunc(){
     }
 }
 
-extern int launchMandelbrotOMP(){
+extern int launchJuliaOMP(){
     omp_set_num_threads(THREADS);
 
-    std::cout << "Launch the application with OMP" << std::endl;
+    std::cout << "Launch Julia with OMP" << std::endl;
 
     char** argv = NULL;
     GLUTWindowManagers::init(0, argv);
 
-    float xMin = -1.3968;
-    float xMax = -1.3578;
-    float yMin = -0.03362;
-    float yMax = 0.0013973;
+    float xMin = -1.7;
+    float xMax = +1.7;
+    float yMin = -1.1;
+    float yMax = +1.1;
 
     DomaineMaths domain(xMin, yMin, xMax - xMin, yMax - yMin);
 
     int w = 800;
     int h = 600;
-
-    MandelBrotFunctionalImageOMP* functionalImage = new MandelBrotFunctionalImageOMP(w, h, domain);
-    MandelBrotGLImageOMP* functionSelections = new MandelBrotGLImageOMP(functionalImage);
+   
+    JuliaFunctionalImageOMP* functionalImage = new JuliaFunctionalImageOMP(w, h, domain, -0.745, +0.1);
+    JuliaGLImageOMP* functionSelections = new JuliaGLImageOMP(functionalImage);
 
     GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();
     windowManager->createWindow(functionSelections);

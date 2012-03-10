@@ -12,7 +12,7 @@ class MandelBrotFunctionalImage : public ImageFonctionelSelectionMOOs {
     public:
 	MandelBrotFunctionalImage(int m, int n, DomaineMaths domain);
 
-	void setN(int n);
+	void incN();
 
     protected:
 	void onDomaineChangePerformed(const DomaineMaths& domainNew);
@@ -30,13 +30,15 @@ MandelBrotFunctionalImage::MandelBrotFunctionalImage(int m, int n, DomaineMaths 
     onDomaineChangePerformed(domain);
 }
 
-void MandelBrotFunctionalImage::setN(int n){
-    N = n;
+void MandelBrotFunctionalImage::incN(){
+    ++N;
 
     refreshAll(getCurrentDomaine());
 }
 
 void MandelBrotFunctionalImage::onDomaineChangePerformed(const DomaineMaths& domainNew){
+    N = 10;
+
     //Repaint everything
     refreshAll(domainNew);
 }
@@ -94,7 +96,6 @@ class MandelBrotGLImage : public GLImageFonctionelSelections {
 	MandelBrotGLImage(MandelBrotFunctionalImage* image);
 
     private:
-	float N;
 	float acc;
 
 	void idleFunc();
@@ -103,7 +104,6 @@ class MandelBrotGLImage : public GLImageFonctionelSelections {
 };
 
 MandelBrotGLImage::MandelBrotGLImage(MandelBrotFunctionalImage* newImage) : GLImageFonctionelSelections(newImage), image(newImage) {
-    N = 10;
     acc = 0;
 }
 
@@ -112,8 +112,7 @@ void MandelBrotGLImage::idleFunc(){
 
     //Do not change everytime to make something smoother
     if(acc == 1000){
-	++N;
-	image->setN(N);
+	image->incN();
 	updateView();
 	acc = 0;
     }

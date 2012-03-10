@@ -12,7 +12,7 @@ class JuliaFunctionalImage : public ImageFonctionelSelectionMOOs {
     public:
 	JuliaFunctionalImage(int m, int n, DomaineMaths domain, float cReal, float cImag);
 
-	void setN(int n);
+	void incN();
 
     protected:
 	void onDomaineChangePerformed(const DomaineMaths& domainNew);
@@ -33,13 +33,15 @@ JuliaFunctionalImage::JuliaFunctionalImage(int m, int n, DomaineMaths domain, fl
     onDomaineChangePerformed(domain);
 }
 
-void JuliaFunctionalImage::setN(int n){
-    N = n;
+void JuliaFunctionalImage::incN(){
+    ++N;
 
     refreshAll(getCurrentDomaine());
 }
 
 void JuliaFunctionalImage::onDomaineChangePerformed(const DomaineMaths& domainNew){
+    N = 10;
+
     //Repaint everything
     refreshAll(domainNew);
 }
@@ -97,7 +99,6 @@ class JuliaGLImage : public GLImageFonctionelSelections {
 	JuliaGLImage(JuliaFunctionalImage* image);
 
     private:
-	float N;
 	float acc;
 
 	void idleFunc();
@@ -106,7 +107,6 @@ class JuliaGLImage : public GLImageFonctionelSelections {
 };
 
 JuliaGLImage::JuliaGLImage(JuliaFunctionalImage* newImage) : GLImageFonctionelSelections(newImage), image(newImage) {
-    N = 10;
     acc = 0;
 }
 
@@ -115,8 +115,7 @@ void JuliaGLImage::idleFunc(){
 
     //Do not change everytime to make something smoother
     if(acc == 1000){
-	++N;
-	image->setN(N);
+	image->incN();
 	updateView();
 	acc = 0;
     }
