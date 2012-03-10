@@ -50,8 +50,12 @@ void MandelBrotFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
 	for(int j = 1; j <= w; ++j){
 	    float h = mandelbrot(x, y);
 
-	    setHSB(i, j, h, 1, 1);
-	    std::cout << h << std::endl;
+	    //setFloatRGBA(i, j, h, h, h);
+	    if(h == 0){
+		setHSB(i, j, 0, 0, 0);
+	    } else {
+		setHSB(i, j, h, 1.0, 1.0);
+	    }
 
 	    x += dx;
 	}
@@ -62,17 +66,20 @@ void MandelBrotFunctionalImage<N>::refreshAll(const DomaineMaths& domainNew){
 
 template<int N>
 float MandelBrotFunctionalImage<N>::mandelbrot(float x, float y){
-    std::complex<float> z = std::complex<float>(0, 0);
+    float imag = 0.0;
+    float real = 0.0;
 
     float n = 0;
     float norm;
 
     do{
-	z = z * z + std::complex<float>(x, y);
+	float tmpReal = real;
+	real = real * real - imag * imag + x;
+	imag = tmpReal * imag + imag * tmpReal + y;
 
 	++n;
 
-	norm = std::norm(z);
+	norm = sqrt(real * real + imag * imag);
     } while (norm < 2.0 && n < N);
 
     return n == N ? 0 : (n / (float) N);
