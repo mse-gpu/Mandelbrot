@@ -3,52 +3,13 @@
 
 #include "omp.h"
 
-#include "DomaineMaths.h"
-#include "GLUTWindowManagers.h"
-#include "ImageFonctionelSelectionMOOs.h"
-#include "GLImageFonctionelSelections.h"
+#include "JuliaOMP.hpp"
 
-#define THREADS 12
-
-class JuliaFunctionalImageOMP : public ImageFonctionelSelectionMOOs {
-    public:
-	JuliaFunctionalImageOMP(int m, int n, DomaineMaths domain, float cReal, float cImag);
-
-	void incN();
-
-    protected:
-	void onDomaineChangePerformed(const DomaineMaths& domainNew);
-
-    private:
-	float julia(float x, float y);
-
-	void refreshAll(const DomaineMaths& domainNew);
-
-	const float cReal;
-	const float cImag;
-
-	int N;
-};
-
-JuliaFunctionalImageOMP::JuliaFunctionalImageOMP(int m, int n, DomaineMaths domain, float cReal, float cImag) : ImageFonctionelSelectionMOOs(m,n,domain), cReal(cReal), cImag(cImag), N(10) {
-    //Init the domain
-    onDomaineChangePerformed(domain);
+JuliaImageOMP::JuliaImageOMP(int m, int n, DomaineMaths domain, float cReal, float cImag) : FractaleImage(m,n,domain,10), cReal(cReal), cImag(cImag) {
+    //Nothing to init
 }
 
-void JuliaFunctionalImageOMP::incN(){
-    ++N;
-
-    refreshAll(getCurrentDomaine());
-}
-
-void JuliaFunctionalImageOMP::onDomaineChangePerformed(const DomaineMaths& domainNew){
-    N = 10;
-
-    //Repaint everything
-    refreshAll(domainNew);
-}
-
-void JuliaFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
+void JuliaImageOMP::refreshAll(const DomaineMaths& domainNew){
     int w = getW();
     int h = getH();
 
@@ -85,7 +46,7 @@ void JuliaFunctionalImageOMP::refreshAll(const DomaineMaths& domainNew){
     }
 }
 
-float JuliaFunctionalImageOMP::julia(float x, float y){
+float JuliaImageOMP::julia(float x, float y){
     float real = x;
     float imag = y;
 
@@ -103,59 +64,4 @@ float JuliaFunctionalImageOMP::julia(float x, float y){
     } while (norm <= 2.0 && n < N);
 
     return n == N ? 0 : (n / (float) N);
-}
-
-class JuliaGLImageOMP : public GLImageFonctionelSelections {
-    public:
-	JuliaGLImageOMP(JuliaFunctionalImageOMP* image);
-
-    private:
-	float acc;
-
-	void idleFunc();
-
-	JuliaFunctionalImageOMP* image;
-};
-
-JuliaGLImageOMP::JuliaGLImageOMP(JuliaFunctionalImageOMP* newImage) : GLImageFonctionelSelections(newImage), image(newImage) {
-    acc = 0;
-}
-
-void JuliaGLImageOMP::idleFunc(){
-    ++acc;
-
-    //Do not change everytime to make something smoother
-    if(acc == 10000){
-	image->incN();
-	updateView();
-	acc = 0;
-    }
-}
-
-extern int launchJuliaOMP(){
-    omp_set_num_threads(THREADS);
-
-    std::cout << "Launch Julia with OMP" << std::endl;
-
-    char** argv = NULL;
-    GLUTWindowManagers::init(0, argv);
-
-    float xMin = -1.7;
-    float xMax = +1.7;
-    float yMin = -1.1;
-    float yMax = +1.1;
-
-    DomaineMaths domain(xMin, yMin, xMax - xMin, yMax - yMin);
-
-    int w = 800;
-    int h = 600;
-   
-    JuliaFunctionalImageOMP* functionalImage = new JuliaFunctionalImageOMP(w, h, domain, -0.745, +0.1);
-    JuliaGLImageOMP* functionSelections = new JuliaGLImageOMP(functionalImage);
-
-    GLUTWindowManagers* windowManager = GLUTWindowManagers::getInstance();
-    windowManager->createWindow(functionSelections);
-    windowManager->runALL(); //This call is blocking
-
-    return 0;
 }
