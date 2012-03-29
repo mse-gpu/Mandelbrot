@@ -18,12 +18,10 @@ int launchJulia();
 int launchJuliaOMP();
 
 int main(void){
-    int code = launchMandelbrot();
-    //int code = launchMandelbrotOMP();
-    //int code = launchJulia();
-    //int code = launchJuliaOMP();
-
-    return code;
+    //return launchMandelbrot();
+    //return launchMandelbrotOMP();
+    //return launchJulia();
+    return launchJuliaOMP();
 }
 
 int launchMandelbrot(){
