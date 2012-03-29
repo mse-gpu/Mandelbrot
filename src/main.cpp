@@ -1,16 +1,19 @@
 #include <iostream>
 #include <limits.h>
 
-extern int mainCore(void);
-extern int mainTest(void);
+//The MandelBrot Fractales Launchers
+extern int launchMandelbrot(void);
+extern int launchMandelbrotOMP(void);
 
-int main(void)
-{
-    std::cout << "Launch the tests" << std::endl;
-    int code = mainTest();
+//The Julia Fractales Launchers
+extern int launchJulia(void);
+extern int launchJuliaOMP(void);
 
-    std::cout << "Launch the graphical interface" << std::endl;
-    mainCore();
+int main(void){
+    int code = launchMandelbrot();
+    //int code = launchMandelbrotOMP();
+    //int code = launchJulia();
+    //int code = launchJuliaOMP();
 
     return code;
 }
