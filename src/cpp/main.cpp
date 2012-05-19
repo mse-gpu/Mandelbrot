@@ -138,14 +138,26 @@ int launchJuliaOMP(){
     return 0;
 }
 
-#define DIM_H 12000
-#define DIM_W 16000
-
+#define DIM_H 2000
+#define DIM_W 2000
+#define TIMES 20
 #define THREADS 12
 
-#define N 52
+struct rgba {
+	int r;
+	int g;
+	int b;
+	int a;
+};
 
-float mandelbrot(float x, float y){
+void setFloatRGBA(rgba* image, int i, int j, int r, int g, int b, int a){
+    image[i * (DIM_H) + j].r = r;
+    image[i * (DIM_H) + j].g = g;
+    image[i * (DIM_H) + j].b = b;
+    image[i * (DIM_H) + j].a = a;
+}
+
+float mandelbrot(float x, float y, int N){
     float imag = 0.0;
     float real = 0.0;
 
@@ -165,7 +177,7 @@ float mandelbrot(float x, float y){
     return n == N ? 0 : (n / (float) N);
 }
 
-void benchSequentialMandelBrot(){
+void benchSequentialMandelBrot(rgba* image, int N){
     float xMin = -1.7;
     float xMax = +1.7;
     float yMin = -1.1;
@@ -177,15 +189,13 @@ void benchSequentialMandelBrot(){
     float dy = (float) (domain.dy / (float) DIM_H);
     float y = domain.y0;
 
-    float acc = 0;
-
     for(int i = 1; i <= DIM_H; ++i){
 	float x = domain.x0;
 
 	for(int j = 1; j <= DIM_W; ++j){
-	    float h = mandelbrot(x, y);
+	    float h = mandelbrot(x, y, N);
 
-	    acc += h;
+	    setFloatRGBA(image, i, j, h, h, h, 255);
 
 	    x += dx;
 	}
@@ -194,7 +204,7 @@ void benchSequentialMandelBrot(){
     }
 }
 
-void benchParallelMandelBrot(){
+void benchParallelMandelBrot(rgba* image, int N){
     omp_set_num_threads(THREADS);
 
     float xMin = -1.7;
@@ -211,17 +221,15 @@ void benchParallelMandelBrot(){
     	int tid = omp_get_thread_num();
     	int i = tid + 1;
 
-        float acc = 0;
-
     	float y = domain.y0 + tid * dy;
 
     	while(i <= DIM_H){
     	    float x = domain.x0;
 
     	    for(int j = 1; j <= DIM_W; ++j){
-    		float h = mandelbrot(x, y);
+    		float h = mandelbrot(x, y, N);
 
-    		acc += h;
+		setFloatRGBA(image, i, j, h, h, h, 255);
 
     		x += dx;
     	    }
@@ -236,7 +244,7 @@ void benchParallelMandelBrot(){
 static float cReal = -0.745;
 static float cImag = +0.1;
 
-float julia(float x, float y){
+float julia(float x, float y, int N){
     float real = x;
     float imag = y;
 
@@ -256,7 +264,7 @@ float julia(float x, float y){
     return n == N ? 0 : (n / (float) N);
 }
 
-void benchParallelJulia(){
+void benchParallelJulia(rgba* image, int N){
     omp_set_num_threads(THREADS);
 
     float xMin = -1.7;
@@ -268,7 +276,6 @@ void benchParallelJulia(){
 
     float dx = (float) (domain.dx / (float) DIM_W);
     float dy = (float) (domain.dy / (float) DIM_H);
-    float acc = 0;
 
     #pragma omp parallel
     {
@@ -281,9 +288,9 @@ void benchParallelJulia(){
     	    float x = domain.x0;
 
     	    for(int j = 1; j <= DIM_W; ++j){
-    		float h = julia(x, y);
+    		float h = julia(x, y, N);
 
-    		acc += h;
+    		setFloatRGBA(image, i, j, h, h, h, 255);
 
     		x += dx;
     	    }
@@ -295,7 +302,7 @@ void benchParallelJulia(){
     }
 }
 
-void benchSequentialJulia(){
+void benchSequentialJulia(rgba* image, int N){
     float xMin = -1.7;
     float xMax = +1.7;
     float yMin = -1.1;
@@ -307,15 +314,13 @@ void benchSequentialJulia(){
     float dy = (float) (domain.dy / (float) DIM_H);
     float y = domain.y0;
 
-    float acc = 0;
-
     for(int i = 1; i <= DIM_H; ++i){
     	float x = domain.x0;
 
     	for(int j = 1; j <= DIM_W; ++j){
-    	    float h = julia(x, y);
+    	    float h = julia(x, y, N);
 
-    	    acc += h;
+    	    setFloatRGBA(image, i, j, h, h, h, 255);
 
     	    x += dx;
     	}
@@ -324,51 +329,78 @@ void benchSequentialJulia(){
     }
 }
 
-void benchJulia(){
-    std::cout << "Launch the Julia benchmark" << std::endl;
+void benchJulia(rgba* image, int N){
+    std::cout << "Launch the Julia benchmark with N=" << N << std::endl;
 
     ChronoOMPs chronos;
     chronos.start();
 
-    benchSequentialJulia();
+    for(int i = 0; i < TIMES; ++i){
+	benchSequentialJulia(image, N);
+    }
 
     double timeSequential = chronos.timeElapse();
-    std::cout << "Sequential version took " << timeSequential << "s" << std::endl;
+    std::cout << "Sequential Total (" << TIMES << " times) " << timeSequential << "s" << std::endl;
+    std::cout << "Sequential Mean  (" << TIMES << " times) " << (timeSequential / TIMES) << "s" << std::endl;
 
     chronos.start();
 
-    benchParallelJulia();
+    for(int i = 0; i < TIMES; ++i){
+	benchParallelJulia(image, N);
+    }
 
     double timeParallel = chronos.timeElapse();
-    std::cout << "OMP version took " << timeParallel << "s" << std::endl;
+    std::cout << "OMP Total (" << TIMES << " times) " << timeParallel << "s" << std::endl;
+    std::cout << "OMP Mean  (" << TIMES << " times) " << (timeParallel / TIMES) << "s" << std::endl;
 
     std::cout << "Factor=" << (timeSequential / timeParallel) << std::endl;
 }
 
-void benchMandelbrot(){
-    std::cout << "Launch the MandelBrot benchmark" << std::endl;
+void benchMandelbrot(rgba* image, int N){
+    std::cout << "Launch the MandelBrot benchmark with N=" << N << std::endl;
 
     ChronoOMPs chronos;
     chronos.start();
 
-    benchSequentialMandelBrot();
+    for(int i = 0; i < TIMES; ++i){
+	benchSequentialMandelBrot(image, N);
+    }
 
     double timeSequential = chronos.timeElapse();
-    std::cout << "Sequential version took " << timeSequential << "s" << std::endl;
+    std::cout << "Sequential Total (" << TIMES << " times) " << timeSequential << "s" << std::endl;
+    std::cout << "Sequential Mean  (" << TIMES << " times) " << (timeSequential / TIMES) << "s" << std::endl;
 
     chronos.start();
 
-    benchParallelMandelBrot();
+    for(int i = 0; i < TIMES; ++i){
+	benchParallelMandelBrot(image, N);
+    }
 
     double timeParallel = chronos.timeElapse();
-    std::cout << "OMP version took " << timeParallel << "s" << std::endl;
+    std::cout << "OMP Total (" << TIMES << " times) " << timeParallel << "s" << std::endl;
+    std::cout << "OMP Mean  (" << TIMES << " times) " << (timeParallel / TIMES) << "s" << std::endl;
 
     std::cout << "Factor=" << (timeSequential / timeParallel) << std::endl;
 }
 
 int bench(){
-    benchMandelbrot();
-    benchJulia();
+    std::cout << "Launch the Fractales benchmark" << std::endl;
+
+    rgba* image = (rgba*) calloc(sizeof(rgba),  (DIM_H + 1) * (DIM_W + 1));
+
+    benchMandelbrot(image, 10);
+    benchJulia(image, 10);
+
+    benchMandelbrot(image, 25);
+    benchJulia(image, 25);
+
+    benchMandelbrot(image, 50);
+    benchJulia(image, 50);
+
+    benchMandelbrot(image, 100);
+    benchJulia(image, 100);
+
+    free(image);
 
     return 0;
 }
